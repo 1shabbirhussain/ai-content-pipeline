@@ -1,2 +1,12 @@
 openpyxl>=3.1.5,<4
 playwright>=1.50,<2
+fastapi
+uvicorn[standard]
+sqlalchemy
+pymysql
+jinja2
+python-multipart
+passlib[bcrypt]
+PyJWT
+python-dotenv
+cryptography

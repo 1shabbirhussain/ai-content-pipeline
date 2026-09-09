@@ -1,0 +1,157 @@
+{% extends "layout.html" %}
+
+{% block title %}Scraper Progress - Scraper App{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Scraper Dashboard</h2>
+    <div>
+        <form id="startForm" action="/scraper/start" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-success" id="startBtn">Start Scraping</button>
+        </form>
+        <form id="stopForm" action="/scraper/stop" method="POST" class="d-inline">
+            <button type="submit" class="btn btn-danger" id="stopBtn" disabled>Stop</button>
+        </form>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold">Overall Progress (Current Run)</div>
+            <div class="card-body text-center">
+                <h4 id="runStatus" class="mb-3">Idle</h4>
+                <div class="progress mb-3" style="height: 30px;">
+                    <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 0%;">0%</div>
+                </div>
+                <div class="d-flex justify-content-around">
+                    <div>
+                        <small class="text-muted text-uppercase d-block">Total</small>
+                        <strong class="fs-4" id="statTotal">-</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase d-block">Completed</small>
+                        <strong class="fs-4 text-success" id="statCompleted">-</strong>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase d-block">Failed</small>
+                        <strong class="fs-4 text-danger" id="statFailed">-</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-white fw-bold d-flex justify-content-between">
+                <span>System Queue</span>
+                <a href="/admin/books" class="small text-decoration-none">Manage</a>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Total Books in System</span>
+                        <strong id="globalTotal">-</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Pending</span>
+                        <strong class="text-warning" id="globalPending">-</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Processing</span>
+                        <strong class="text-info" id="globalProcessing">-</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Scraped</span>
+                        <strong class="text-success" id="globalScraped">-</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>Failed</span>
+                        <strong class="text-danger" id="globalFailed">-</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-5">
+    <div class="card-header bg-white fw-bold d-flex justify-content-between">
+        <span>Live Logs</span>
+        <span class="badge bg-secondary" id="logCount">0 lines</span>
+    </div>
+    <div class="card-body p-0">
+        <pre id="logContainer" class="m-0 p-3 bg-dark text-light" style="height: 400px; overflow-y: scroll; font-size: 0.85rem;"></pre>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const logContainer = document.getElementById('logContainer');
+    
+    function fetchStatus() {
+        fetch('/scraper/status')
+            .then(r => r.json())
+            .then(data => {
+                // Update buttons
+                document.getElementById('startBtn').disabled = data.is_running;
+                document.getElementById('stopBtn').disabled = !data.is_running || data.should_stop;
+                
+                // Update run stats
+                if (data.stats && data.stats.total !== undefined) {
+                    const total = data.stats.total;
+                    const completed = data.stats.completed;
+                    const failed = data.stats.failed;
+                    const done = completed + failed;
+                    
+                    document.getElementById('statTotal').innerText = total;
+                    document.getElementById('statCompleted').innerText = completed;
+                    document.getElementById('statFailed').innerText = failed;
+                    document.getElementById('runStatus').innerText = data.stats.status;
+                    
+                    let pct = 0;
+                    if (total > 0) {
+                        pct = Math.round((done / total) * 100);
+                    } else if (data.stats.status === 'COMPLETED') {
+                        pct = 100;
+                    }
+                    const pBar = document.getElementById('progressBar');
+                    pBar.style.width = pct + '%';
+                    pBar.innerText = pct + '%';
+                    
+                    if (data.is_running) {
+                        pBar.classList.add('progress-bar-animated', 'progress-bar-striped');
+                    } else {
+                        pBar.classList.remove('progress-bar-animated', 'progress-bar-striped');
+                    }
+                }
+                
+                // Update global stats
+                if (data.global_stats) {
+                    document.getElementById('globalTotal').innerText = data.global_stats.total;
+                    document.getElementById('globalPending').innerText = data.global_stats.pending;
+                    document.getElementById('globalProcessing').innerText = data.global_stats.processing;
+                    document.getElementById('globalScraped').innerText = data.global_stats.scraped;
+                    document.getElementById('globalFailed').innerText = data.global_stats.failed;
+                }
+                
+                // Update logs
+                if (data.logs) {
+                    const currentLogs = data.logs.join('\n');
+                    if (logContainer.innerText !== currentLogs) {
+                        logContainer.innerText = currentLogs;
+                        logContainer.scrollTop = logContainer.scrollHeight;
+                        document.getElementById('logCount').innerText = data.logs.length + ' lines';
+                    }
+                }
+            })
+            .catch(err => console.error(err));
+    }
+
+    // Poll every 2 seconds
+    setInterval(fetchStatus, 2000);
+    fetchStatus();
+</script>
+{% endblock %}

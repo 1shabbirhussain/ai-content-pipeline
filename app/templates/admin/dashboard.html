@@ -1,0 +1,86 @@
+{% extends "layout.html" %}
+
+{% block title %}Admin Dashboard - Scraper App{% endblock %}
+
+{% block content %}
+<h2 class="mb-4">Admin Dashboard</h2>
+
+<div class="row mb-4">
+    <div class="col-md-2">
+        <div class="card text-white bg-primary mb-3">
+            <div class="card-body text-center">
+                <h5 class="card-title">Total</h5>
+                <h3>{{ stats.total_books }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-dark bg-warning mb-3">
+            <div class="card-body text-center">
+                <h5 class="card-title">Pending</h5>
+                <h3>{{ stats.pending }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-info mb-3">
+            <div class="card-body text-center">
+                <h5 class="card-title">Processing</h5>
+                <h3>{{ stats.processing }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-success mb-3">
+            <div class="card-body text-center">
+                <h5 class="card-title">Scraped</h5>
+                <h3>{{ stats.scraped }}</h3>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="card text-white bg-danger mb-3">
+            <div class="card-body text-center">
+                <h5 class="card-title">Failed</h5>
+                <h3>{{ stats.failed }}</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <h4>Last Scrape Run</h4>
+        {% if last_run %}
+        <table class="table table-bordered bg-white">
+            <tr><th>Run ID</th><td>{{ last_run.id }}</td></tr>
+            <tr><th>Status</th><td>
+                <span class="badge {% if last_run.status == 'COMPLETED' %}bg-success{% elif last_run.status == 'FAILED' %}bg-danger{% else %}bg-info{% endif %}">
+                    {{ last_run.status }}
+                </span>
+            </td></tr>
+            <tr><th>Started At</th><td>{{ last_run.started_at }}</td></tr>
+            <tr><th>Completed At</th><td>{{ last_run.completed_at or 'N/A' }}</td></tr>
+            <tr><th>Total / Done / Failed</th><td>{{ last_run.total_books }} / {{ last_run.completed_books }} / {{ last_run.failed_books }}</td></tr>
+        </table>
+        {% else %}
+        <p>No runs yet.</p>
+        {% endif %}
+    </div>
+    <div class="col-md-6">
+        <h4>Recent Errors</h4>
+        {% if recent_errors %}
+        <ul class="list-group">
+            {% for error in recent_errors %}
+            <li class="list-group-item list-group-item-danger">
+                <strong>Book ID {{ error.book_id }}:</strong> {{ error.error_type }}<br>
+                <small>{{ error.error_message }}</small>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>No recent errors.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

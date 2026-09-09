@@ -1,0 +1,63 @@
+{% extends "layout.html" %}
+
+{% block title %}Books - Scraper App{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Books Catalog</h2>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        <form method="GET" action="/books/dashboard" class="row g-3">
+            <div class="col-md-5">
+                <input type="text" name="search" class="form-control" placeholder="Search by Title or ID" value="{{ search }}">
+            </div>
+            <div class="col-md-4">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="PENDING" {% if status == 'PENDING' %}selected{% endif %}>PENDING</option>
+                    <option value="PROCESSING" {% if status == 'PROCESSING' %}selected{% endif %}>PROCESSING</option>
+                    <option value="SCRAPED" {% if status == 'SCRAPED' %}selected{% endif %}>SCRAPED</option>
+                    <option value="FAILED" {% if status == 'FAILED' %}selected{% endif %}>FAILED</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row row-cols-1 row-cols-md-3 g-4">
+    {% for book in books %}
+    <div class="col">
+        <div class="card h-100 shadow-sm border-0">
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="badge bg-secondary">ID: {{ book.book_id }}</span>
+                    <span class="badge {% if book.scrape_status == 'SCRAPED' %}bg-success{% elif book.scrape_status == 'FAILED' %}bg-danger{% elif book.scrape_status == 'PROCESSING' %}bg-info{% else %}bg-warning text-dark{% endif %}">
+                        {{ book.scrape_status }}
+                    </span>
+                </div>
+                <h5 class="card-title">{{ book.title or 'Title not fetched' }}</h5>
+                <h6 class="card-subtitle mb-2 text-muted">{{ book.author or 'Unknown Author' }}</h6>
+                <p class="card-text small text-truncate">
+                    <a href="{{ book.detail_url }}" target="_blank">View on Website</a>
+                </p>
+            </div>
+            <div class="card-footer bg-white border-0 d-flex justify-content-between">
+                <a href="/books/{{ book.id }}/pages" class="btn btn-sm btn-outline-secondary">View Pages</a>
+                {% if book.scrape_status == 'SCRAPED' %}
+                <a href="/files/download/{{ book.id }}" class="btn btn-sm btn-success">Download XLSX</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12 text-center py-5">
+        <h4 class="text-muted">No books found matching criteria.</h4>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
