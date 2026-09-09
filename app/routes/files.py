@@ -48,8 +48,8 @@ async def download_scraped_book(b_id: int, db: Session = Depends(get_db), curren
     # Detail Row
     detail_row = [
         book.book_id, book.detail_url, book.title, book.language, book.author, book.publisher,
-        book.total_pages, "DETAIL", book.detail_url, book.title, "", "",
-        False, False, False
+        book.total_pages, "DETAIL", book.detail_url, book.title, book.detail_text or "", book.detail_meta_description or "",
+        book.has_audio or False, book.has_pdf or False, book.has_translation or False
     ]
     for c, v in enumerate(detail_row, 1):
         ws.cell(2, c, v)

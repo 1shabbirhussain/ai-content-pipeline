@@ -364,7 +364,13 @@ def do_scrape_book_logic(browser: Browser, db_session, book_id_pk: int, book_det
         book.author = meta["author"]
         book.publisher = meta["publisher"]
         book.total_pages = meta["page_count"]
+        book.detail_text = detail_text
+        book.detail_meta_description = extract_meta_description(page)
+        
         has_audio, has_pdf, has_translation = detail_features(page)
+        book.has_audio = has_audio
+        book.has_pdf = has_pdf
+        book.has_translation = has_translation
         
         db_session.commit()
         
