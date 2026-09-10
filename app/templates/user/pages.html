@@ -10,6 +10,35 @@
 </div>
 
 <div class="accordion" id="pagesAccordion">
+    {% if book.detail_text %}
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="headingDetail">
+            <button class="accordion-button bg-light font-weight-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDetail" aria-expanded="true">
+                <strong>Detail Page</strong> - Metadata & Description
+            </button>
+        </h2>
+        <div id="collapseDetail" class="accordion-collapse collapse show" data-bs-parent="#pagesAccordion">
+            <div class="accordion-body">
+                <div class="mb-2">
+                    <a href="{{ book.detail_url }}" target="_blank" class="small">Source URL</a>
+                </div>
+                <div class="row mb-3 small">
+                    <div class="col-md-3"><strong>Author:</strong> {{ book.author or 'N/A' }}</div>
+                    <div class="col-md-3"><strong>Publisher:</strong> {{ book.publisher or 'N/A' }}</div>
+                    <div class="col-md-3"><strong>Language:</strong> {{ book.language or 'N/A' }}</div>
+                    <div class="col-md-3"><strong>Audio/PDF:</strong> {{ 'Yes' if book.has_audio else 'No' }} / {{ 'Yes' if book.has_pdf else 'No' }}</div>
+                </div>
+                {% if book.detail_meta_description %}
+                <div class="alert alert-secondary small py-2 mb-2"><strong>Meta:</strong> {{ book.detail_meta_description }}</div>
+                {% endif %}
+                <div class="bg-white p-3 border rounded" style="max-height: 400px; overflow-y: auto; white-space: pre-wrap;">
+                    {{ book.detail_text }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     {% for page in pages %}
     <div class="accordion-item">
         <h2 class="accordion-header" id="heading{{ page.id }}">
